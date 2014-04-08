@@ -21,3 +21,8 @@ _testmain.go
 
 *.exe
 *.test
+*.iml
+*.properties
+*.xml
+artistry
+.idea
