@@ -64,5 +64,5 @@ func main() {
 		}
 		return 200, "ok"
 	})
-	m.Run()
+	http.ListenAndServe(":8080", m)
 }
