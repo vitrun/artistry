@@ -55,9 +55,13 @@ func main() {
 		return 200, `<html><body>
 			<form action='/qr/gen/' method='POST' enctype='multipart/form-data'>
 				image: <input name='files' type='file' multiple='multiple' />
-				url: <input name='url' type='text' />
-				version: <input name='version' type='text' />
-				shorturl: <input name='short' type='checkbox' />
+				version: <select name='version' type='text' />
+				<option value="4">4</option>
+				<option value="6">6</option>
+				<option value="8">8</option>
+				</select>
+				shorturl: <input name='short' type='checkbox' /><br />
+				url: <input name='url' type='text' size="80" />
 				<input type='submit' />
 			</form>
 			</body></html>`
