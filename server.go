@@ -4,12 +4,33 @@
 package main
 
 import (
-	"github.com/go-martini/martini"
-	"github.com/vitrun/qart"
 	"net/http"
 	"strconv"
 	"strings"
+	"github.com/vitrun/qart"
+	"github.com/go-martini/martini"
+	"github.com/vitrun/artistry/urlshortener"
 )
+
+
+func shorten(url string) (string, error){
+	// 使用http中的default client创建一个新的 urlshortener 实例
+	svc, _ := urlshortener.New(http.DefaultClient)
+	res, err := svc.Url.Insert(&urlshortener.Url { LongUrl: url, }).Do()
+	if err != nil {
+		return "", err
+	}
+	return res.Id, err
+}
+
+func lengthen(url string) (string, error) {
+	svc, _ := urlshortener.New(http.DefaultClient)
+	res, err := svc.Url.Get(url).Do()
+	if err != nil {
+		return "", err
+	}
+	return res.LongUrl, err
+}
 
 func main() {
 	m := martini.Classic()
@@ -20,6 +41,7 @@ func main() {
 				image: <input name='files' type='file' multiple='multiple' />
 				url: <input name='url' type='text' />
 				version: <input name='version' type='text' />
+				shorturl: <input name='short' type='checkbox' />
 				<input type='submit' />
 			</form>
 			</body></html>`
@@ -28,6 +50,7 @@ func main() {
 	m.Post("/qr/gen/", func(r *http.Request) (int, string) {
 		url := r.FormValue("url")
 		versionStr := r.FormValue("version")
+		shorturl := r.FormValue("short")
 		files := r.MultipartForm.File["files"]
 
 		err := r.ParseMultipartForm(100000)
@@ -40,6 +63,12 @@ func main() {
 		}
 		// should remove #
 		url = strings.Split(url, "#")[0]
+		if shorturl == "on" {
+			url, err = shorten(url)
+			if err != nil {
+				return http.StatusInternalServerError, err.Error()
+			}
+		}
 
 		for i, _ := range files {
 			file, err := files[i].Open()
