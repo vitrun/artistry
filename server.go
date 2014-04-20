@@ -32,6 +32,21 @@ func lengthen(url string) (string, error) {
 	return res.LongUrl, err
 }
 
+func prepareUrl(c chan string, toShort bool) {
+	url := <- c
+	// should remove #
+	url = strings.Split(url, "#")[0]
+	if toShort {
+		nurl, err := shorten(url)
+		if err != nil {
+			c <- nurl
+		} else{
+			c <- ""
+		}
+	}
+	c <- url
+}
+
 func main() {
 	m := martini.Classic()
 	SIZE_LIMIT := 1024 * 1024
@@ -61,15 +76,10 @@ func main() {
 		if err != nil {
 			return http.StatusInternalServerError, err.Error()
 		}
-		// should remove #
-		url = strings.Split(url, "#")[0]
-		if shorturl == "on" {
-			url, err = shorten(url)
-			if err != nil {
-				return http.StatusInternalServerError, err.Error()
-			}
-		}
 
+		c := make(chan string, 1)
+		c <- url
+		go prepareUrl(c, shorturl=="on")
 		for i, _ := range files {
 			file, err := files[i].Open()
 			defer file.Close()
@@ -87,6 +97,12 @@ func main() {
 			}
 			qrImg := qart.InitImage(img, 879633355, version, 4, 2, 4, 4,
 				false, false, false, false)
+
+			url := <- c
+			// error, timeout maybe
+			if url == "" {
+				return http.StatusInternalServerError, "Can not get shortened url"
+			}
 			qrData := qart.EncodeUrl(url, qrImg)
 
 			// use only the first file
