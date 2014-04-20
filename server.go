@@ -85,11 +85,12 @@ func main() {
 			if err != nil {
 				return http.StatusInternalServerError, err.Error()
 			}
-			qrImg := qart.Encode(url, img, 879633355, version, 4, 2, 4, 4,
+			qrImg := qart.InitImage(img, 879633355, version, 4, 2, 4, 4,
 				false, false, false, false)
+			qrData := qart.EncodeUrl(url, qrImg)
 
-			// use only the fist file
-			return 200, (string)(qrImg)
+			// use only the first file
+			return 200, (string)(qrData)
 		}
 		return 200, "ok"
 	})
