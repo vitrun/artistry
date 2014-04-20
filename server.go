@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"log"
 	"github.com/vitrun/qart"
 	"github.com/go-martini/martini"
 	"github.com/vitrun/artistry/urlshortener"
@@ -39,9 +40,9 @@ func prepareUrl(c chan string, toShort bool) {
 	if toShort {
 		nurl, err := shorten(url)
 		if err != nil {
-			c <- nurl
-		} else{
 			c <- ""
+		} else{
+			c <- nurl
 		}
 	}
 	c <- url
@@ -62,7 +63,7 @@ func main() {
 			</body></html>`
 	})
 
-	m.Post("/qr/gen/", func(r *http.Request) (int, string) {
+	m.Post("/qr/gen/", func(r *http.Request, log *log.Logger) (int, string) {
 		url := r.FormValue("url")
 		versionStr := r.FormValue("version")
 		shorturl := r.FormValue("short")
@@ -100,6 +101,7 @@ func main() {
 
 			url := <- c
 			// error, timeout maybe
+			log.Println("Got ur:", url, " shorten:", shorturl)
 			if url == "" {
 				return http.StatusInternalServerError, "Can not get shortened url"
 			}
